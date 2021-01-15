@@ -1,0 +1,34 @@
+---
+- hosts: 127.0.0.1
+  tasks:
+    - name: Add user
+      user:
+        name: shyam
+        shell: /bin/bash
+        groups: wheel
+        append: yes
+    - name: Allow shyam to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^shyam'
+        line: 'shyam ALL=(ALL) NOPASSWD: ALL'
+    - name: Set authorized key took for shyam
+      authorized_key:
+        user: shyam
+        state: present
+        key: "ssh-rsa XXXxxxxxxxxxxx*******************************"
+    - name: make download dir
+      file:
+        path: /opt/test/app/
+        state: directory
+        mode: "0755"
+    - name: get war file
+      aws_s3:
+        bucket: "test-confing"
+        object: "gameoflife-0.0.1.war"
+        dest: "/opt/test/app/"
+        mode: get
+    - name: executing war
+        shell: "cd /opt/test/app/; nohup java -jar gameoflife-0.0.1.war &"
+        become: true
